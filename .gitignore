@@ -1,0 +1,2 @@
+# ignore temporary files ending in a tilde ~
+*~
