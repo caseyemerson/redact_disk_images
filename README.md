@@ -2,6 +2,7 @@ redact_disk_images
 ==================
 
 Getting Started
+
 redact_disk_images is a collection of python scripts that overwrite data in a forensic disk image files. An image file location, feature offset, and a byte length are passed into the script through the command prompt and the script overwrites the feature.
 
 Dependencies
