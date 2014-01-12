@@ -31,7 +31,7 @@ int overwrite(char *diskimage, int offset, int length){	// define the overwrite 
 // MAIN PROGRAM
 int main( int argc, char ** argv ) {
 
-	char * filePath  = "test2.file";					// file location
+	char * filePath  = "test.file";					// file location
 	int offset = 14;									// feature offset
 	int length = 5;										// length of feature
 
