@@ -36,8 +36,11 @@ flags = {}	# define dictionary (key value pair)
 saveFilePath = os.getcwd()	# get the current working directory
 
 
+
+
 """ FUNCTIONS GO HERE"""
 
+### BOOKMARK PARSING FUNCTION ###
 def parseBookmarks(BookmarkFile):	# open and parse the Bulk_Extractor bookmark file
 	log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - processing bookmark file located at: ", localtime())) + (BookmarkFile) + '\n')	# enter into log
 	with open(BookmarkFile, "r") as file:		# open the bookmark file in read mode
@@ -56,6 +59,7 @@ def parseBookmarks(BookmarkFile):	# open and parse the Bulk_Extractor bookmark f
 	return (feature,offset,length)		# return the disk image, list of features, their offsets and lengths. This is redundant because of the global declaration of these variables
 
 
+### REDACTION FUNCTION ###
 def redact(diskimage,beginOffset,featureLength): # redact the disk image by passing the image location, offset, and length of target data
 	byte ="\x00"			# hex byte used to overwrite data
 	endOffset = int(beginOffset) + int(featureLength)
@@ -82,9 +86,23 @@ def redact(diskimage,beginOffset,featureLength): # redact the disk image by pass
 	return		# return
 
 
+
+### DFXML PARSING FUNCTION ###
 def parseDFXML(ewfDiskImage):
 	dfxml = subprocess.check_output(["ewfinfo", ewfDiskImage, "-f", "dfxml"])
 	root = ET.fromstring(dfxml)
+
+	if root.iter('notes'):	# look for existing notes object
+		for acquiry_information in root.iter('acquiry_information'):
+			acquiry_information = ET.SubElement(acquiry_information,'notes') # if notes object doesn't exist, create the object under acquiry_information
+	else:
+		for acquiry_information in root.iter('acquiry_information'):
+			acquiry_information = ET.SubElement(acquiry_information,'notes') # if notes object doesn't exist, create the object under acquiry_information
+
+	if root.iter('notes'):	# look for existing notes
+		for notes in root.iter('notes'):
+			notes.text = 'here is a new note'
+			flags['-N'] = notes.text
 
 	if root.iter('sectors_per_chunk'):
 		for sectors_per_chunk in root.iter('sectors_per_chunk'):
@@ -134,18 +152,6 @@ def parseDFXML(ewfDiskImage):
 			else:
 				 flags['-M'] = 'logical'
 
-	if root.iter('notes'):	# look for existing notes object
-		for acquiry_information in root.iter('acquiry_information'):
-			acquiry_information = ET.SubElement(acquiry_information,'notes') # if notes object doesn't exist, create the object under acquiry_information
-	else:
-		for acquiry_information in root.iter('acquiry_information'):
-			acquiry_information = ET.SubElement(acquiry_information,'notes') # if notes object doesn't exist, create the object under acquiry_information
-
-	if root.iter('notes'):	# look for existing notes
-		for notes in root.iter('notes'):
-			notes.text = 'here is a new note'
-			flags['-N'] = notes.text
-
 	if root.iter('bytes_per_sector'):
 		for bytes_per_sector in root.iter('bytes_per_sector'):
 			flags['-P'] = bytes_per_sector.text
@@ -158,15 +164,18 @@ def parseDFXML(ewfDiskImage):
 
 	flags['-r'] = 2	# set the retry number to 2
 	flags['-o'] = 0	# set the begining offset to zero
-	flags['-t'] = args.output
+	flags['-t'] = args.output + '_REDACTED'
 	return
 
 
+### CONVERT RAW TO EWF ###
 def exportEWF(rawDiskImage):
 	ewfacquire = ['ewfacquire', rawDiskImage, '-u']	# initialize variable
 	[ewfacquire.extend([str(key),str(value)]) for key,value in flags.items()]	# convert the flags key/value dictionary to a list
 	subprocess.check_call(ewfacquire)	# call ewfacquire with the dfxml arguments
 	return
+
+
 
 
 """ MAIN STARTS HERE"""
@@ -185,6 +194,7 @@ try:
 	log.write('Script started running at ' + (strftime("%H:%M:%S on %a %b %d, %Y", localtime())) + '\n')    # write the first entry into the log
 except:
 	print('There was an error creating the log file')
+
 
 if (args.image_format) == 'EWF':
 	print('Converting EWF image to raw...')
