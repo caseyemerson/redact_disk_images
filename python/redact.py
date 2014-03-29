@@ -92,87 +92,122 @@ def parseDFXML(ewfDiskImage):
 	dfxml = subprocess.check_output(["ewfinfo", ewfDiskImage, "-f", "dfxml"])
 	root = ET.fromstring(dfxml)
 
+	log.write('\n\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Attempting to parse DFXML...')	# update log file
+
 	if root.iter('notes'):	# look for existing notes object
 		for acquiry_information in root.iter('acquiry_information'):
 			acquiry_information = ET.SubElement(acquiry_information,'notes') # if notes object doesn't exist, create the object under acquiry_information
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'The DFXML Notes object already exists')	# update log file
 	else:
 		for acquiry_information in root.iter('acquiry_information'):
 			acquiry_information = ET.SubElement(acquiry_information,'notes') # if notes object doesn't exist, create the object under acquiry_information
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'The DFXML Notes object did NOT exist, creating one now...')	# update log file
 
 	if root.iter('notes'):	# look for existing notes
 		for notes in root.iter('notes'):
-			notes.text = 'here is a new note'
+			#notes.text = 'here is a new note'
 			flags['-N'] = notes.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Imported Existing DFXML Notes: ' + str(flags['-N']))	# update log file
 
 	if root.iter('sectors_per_chunk'):
 		for sectors_per_chunk in root.iter('sectors_per_chunk'):
 			flags['-b'] = sectors_per_chunk.text
 			flags['-p'] = sectors_per_chunk.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Sectors Per Chunk to: ' + sectors_per_chunk.text)	# update log file
 
 	if root.iter('media_size'):
 		for media_size in root.iter('media_size'):
-			flags['-B'] = (re.search('[^\(]\d+[^\s]', media_size.text)).group()	# parse the number between the parens
+			size = (re.search('(?<=\()\d+', media_size.text)).group()	# parse the number between the parens
+			flags['-B'] = size
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Media Size to: ' + size)	# update log file
 
 	if root.iter('compression_level'):
 		for compression_level in root.iter('compression_level'):
-			flags['-c'] = compression_level.text[:-12]
+			compression = compression_level.text[:-12]
+			flags['-c'] = compression
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Compression Level to: ' + compression)	# update log file
 
 	if root.iter('case_number'):
 		for case_number in root.iter('case_number'):
 			flags['-C'] = case_number.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Case Number to: ' + case_number.text)	# update log file
 
 	if root.iter('description'):
 		for description in root.iter('description'):
 			flags['-D'] = description.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Description to: ' + description.text)	# update log file
 
 	if root.iter('examiner_name'):
 		for examiner_name in root.iter('examiner_name'):
 			flags['-e'] = examiner_name.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Examiner Name to: ' + examiner_name.text)	# update log file
 
 	if root.iter('evidence_number'):
 		for evidence_number in root.iter('evidence_number'):
 			flags['-E'] = evidence_number.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Evidence Number to: ' + evidence_number.text)	# update log file
 
 	if root.iter('file_format'):
 		for file_format in root.iter('file_format'):
-			flags['-f'] = file_format.text.replace(" ", "").lower()
+			fformat = file_format.text.replace(" ", "").lower()
+			flags['-f'] = fformat
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set File Format to: ' + fformat)	# update log file
 
 	if root.iter('error_granularity'):
 		for error_granularity in root.iter('error_granularity'):
 			flags['-g'] = error_granularity.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Error Granularity to: ' + error_granularity.text)	# update log file
 
 	if root.iter('media_type'):
 		for media_type in root.iter('media_type'):
-			flags['-m'] = media_type.text[:-5]
+			mtype = media_type.text[:-5]
+			flags['-m'] = mtype
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Media Type to: ' + mtype)	# update log file
 
 	if root.iter('is_physical'):
 		for is_physical in root.iter('is_physical'):
 			if is_physical.text == 'yes':
 				flags['-M'] = 'physical'
+				log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Is Physical to: physical')	# update log file
 			else:
-				 flags['-M'] = 'logical'
+				flags['-M'] = 'logical'
+				log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Is Physical to: logical')	# update log file
 
 	if root.iter('bytes_per_sector'):
 		for bytes_per_sector in root.iter('bytes_per_sector'):
 			flags['-P'] = bytes_per_sector.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Bytes per Sector to: ' + bytes_per_sector.text)	# update log file
 
 	if root.iter('segment_file_size'):
 		for segment_file_size in root.iter('segment_file_size'):
 			flags['-S'] = segment_file_size.text
+			log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Segment File Size to: ' + segment_file_size.text)	# update log file
 	else:
 		flags['-S'] = '100 TiB'
+		log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set Segment File Size to: 100 TiB')	# update log file
 
 	flags['-r'] = 2	# set the retry number to 2
+	log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set the Retry limit to: 2')	# update log file
 	flags['-o'] = 0	# set the begining offset to zero
+	log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Set the Begining Offset to: 0')	# update log file
 	flags['-t'] = args.output + '_REDACTED'
 	return
 
 
 ### CONVERT RAW TO EWF ###
 def exportEWF(rawDiskImage):
+	log.write('\n\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Atempting to create packaged EWF from RAW image\n')	# update log file
 	ewfacquire = ['ewfacquire', rawDiskImage, '-u']	# initialize variable
 	[ewfacquire.extend([str(key),str(value)]) for key,value in flags.items()]	# convert the flags key/value dictionary to a list
-	subprocess.check_call(ewfacquire)	# call ewfacquire with the dfxml arguments
+	
+	log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Attempting process: ' + (' '.join(ewfacquire)))	# update log file
+	try:
+		check = subprocess.check_call(ewfacquire)	# call ewfacquire with the dfxml arguments
+		log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'Successfully created EWF disk image')	# update log file
+	
+	except CalledProcessError as e:
+		log.write('\n' + (strftime("%H:%M:%S %b %d, %Y - ", localtime())) + 'ERROR creating EWF disk image: ' + e)	# update log file
+		
 	return
 
 
@@ -189,7 +224,7 @@ args = parser.parse_args()	# parse the arguments and store in variable args
 print('\nyou entered ' + args.disk_image + ' ' + args.bookmark_file + ' ' + args.image_format + ' ' + args.output)	# used for debug
 
 try:
-	log = open(saveFilePath + '/log.txt', 'w')	# open the log file
+	log = open(saveFilePath + '/' + args.output + '.log.txt', 'w')	# open the log file
 	#print('\nlog written to ' + saveFilePath + '/log.txt') # used for debug
 	log.write('Script started running at ' + (strftime("%H:%M:%S on %a %b %d, %Y", localtime())) + '\n')    # write the first entry into the log
 except:
@@ -227,8 +262,9 @@ for i in xrange(len(offset)):
 
 ### document the redaction in the notes section of the DFXML
 
+
 exportEWF(args.output + '.raw')
 
-log.write('\nScript stopped running at ' + (strftime("%H:%M:%S on %a %b %d, %Y", localtime())))   # write out the last entry in the log
+log.write('\nScript stopped running at ' + (strftime("%H:%M:%S on %a %b %d, %Y", localtime())) + '\n\n')   # write out the last entry in the log
 log.close()    # close the log file
 
